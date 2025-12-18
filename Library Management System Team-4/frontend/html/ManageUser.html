@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Library Management — Users</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+}
+/* simple, clean layout */
+:root {
+     --accent:#2b2b2b;
+      --muted:#dde6f1; 
+      --danger:#d9534f; 
+    }
+body {
+     font-family: Arial, sans-serif;
+     margin:0;
+     background: #f5f7fa;
+     color:var(--accent);
+     }
+.site-header {
+     display: flex;
+     justify-content: space-between;
+     background:var(--muted); 
+     padding:20px; 
+    }
+
+    .site-header button{
+     padding: 8px 16px;
+     border: 1px solid #555;
+     border-radius: 4px;
+     background: white;
+    }
+
+.container { 
+    display:flex;
+     gap:20px;
+     padding:30px; 
+    }
+
+.sidebar{
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+ .sidebar button{
+  padding: 10px;
+  border: none;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+ }
+
+ .sidebar button.active, aside button:hover {
+  background: #e0eaf6;
+}
+
+.content {
+     flex:1;
+     }
+
+#user-form {
+     display:flex; 
+     gap:8px; 
+     margin-bottom:16px;
+      align-items:center; 
+    }
+
+#user-form input, #user-form select { 
+    padding:8px;
+     border-radius:6px;
+      border:1px solid #ddd; 
+    }
+
+#user-form button {
+     padding:8px 12px; 
+     border-radius:6px;
+      border:1px solid #ccc; 
+      background:white; 
+      cursor:pointer; 
+    }
+
+#users-table {
+     width:100%; 
+     border-collapse:collapse; 
+     background:#fff;
+      border-radius:8px;
+       overflow:hidden; 
+       box-shadow:0 1px 3px rgba(0,0,0,.06);
+     }
+#users-table th, #users-table td { 
+    padding:18px;
+     text-align:left;
+     border-bottom:1px solid #eee; 
+    }
+.action-btn {
+     margin-right:8px; 
+     padding:6px 10px;
+     border-radius:6px; 
+     cursor:pointer;
+     border:1px solid #ccc;
+     background:white; 
+    }
+.remove {
+     background:var(--danger);
+     color:white;
+     border-color:rgba(0,0,0,0);
+     }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <h1>Library Management System</h1>
+    <button id="logoutBtn" onclick="logout()">Logout</button>
+  </header>
+
+  <main class="container">
+    <aside class="sidebar">
+      <button onclick="navigateTo('managebooks')">Manage Books</button>
+      <button class="active" onclick="navigateTo('manageusers')">Manage Users</button>
+      <button onclick="navigateTo('transactions')">Transactions</button>
+    </aside>
+
+    <section class="content">
+      <h2>Manage Users</h2>
+
+      <form id="user-form">
+        <input type="hidden" id="user-id">
+        <input type="text" id="name" placeholder="Name" required>
+        <select id="role">
+          <option>Student</option>
+          <option>Librarian</option>
+        </select>
+        <button type="submit">Save</button>
+        <button type="button" id="reset-btn">Reset</button>
+      </form>
+
+      <table id="users-table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Role</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // 🛑 UPDATED API URL FOR LIBRARIAN MANAGEMENT 🛑
+const baseURL = 'http://localhost:8080/api/users';
+
+
+// --- Navigation Functions for Sidebar ---
+function navigateTo(page) {
+    if (page === 'managebooks') window.location.href = 'managebook.html';
+    else if (page === 'manageusers') window.location.href = 'ManageUser.html';
+    else if (page === 'transactions') window.location.href = 'transaction.html';
+}
+
+function logout() {
+    alert("Logging out...");
+    window.location.href = "login.html"; 
+}
+// ----------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.querySelector('#users-table tbody');
+    const form = document.getElementById('user-form');
+    const nameInput = document.getElementById('name');
+    const roleInput = document.getElementById('role');
+    const userIdInput = document.getElementById('user-id');
+    const resetBtn = document.getElementById('reset-btn');
+
+    async function loadUsers(){
+        try {
+            // Uses the new baseURL
+            const res = await fetch(baseURL);
+            const data = await res.json();
+            tbody.innerHTML = '';
+            data.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td>${u.id}</td>
+                  <td>${escapeHtml(u.name)}</td>
+                  <td>${escapeHtml(u.role)}</td>
+                  <td>
+                    <button class="action-btn" data-id="${u.id}" data-action="edit">Edit</button>
+                    <button class="action-btn remove" data-id="${u.id}" data-action="delete">Remove</button>
+                  </td>`;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="4">Failed to load users</td></tr>';
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const role = roleInput.value;
+        const id = userIdInput.value;
+
+        if (!name) return alert('Enter name');
+
+        try {
+            if (id) {
+                // update (Uses the new baseURL)
+                const res = await fetch(`${baseURL}/${id}`, {
+                  method:'PUT',
+                  headers:{ 'Content-Type':'application/json' },
+                  body: JSON.stringify({ name, role })
+                });
+                if (!res.ok) throw new Error('Update failed');
+            } else {
+                // create (Uses the new baseURL)
+                const res = await fetch(baseURL, {
+                  method:'POST',
+                  headers:{ 'Content-Type':'application/json' },
+                  body: JSON.stringify({ name, role })
+                });
+                if (!res.ok) throw new Error('Create failed');
+            }
+            resetForm();
+            loadUsers();
+        } catch (err) {
+            console.error(err);
+            alert('Error saving user');
+        }
+    });
+
+    tbody.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (action === 'edit') {
+            // fetch single user then populate form (Uses the new baseURL)
+            try {
+                const res = await fetch(`${baseURL}/${id}`);
+                const user = await res.json();
+                userIdInput.value = user.id;
+                nameInput.value = user.name;
+                roleInput.value = user.role;
+            } catch (err) { console.error(err); alert('Failed to fetch user'); }
+        } else if (action === 'delete') {
+            if (!confirm('Delete user?')) return;
+            // delete (Uses the new baseURL)
+            try {
+                const res = await fetch(`${baseURL}/${id}`, { method:'DELETE' });
+                if (!res.ok) throw new Error('Delete failed');
+                loadUsers();
+            } catch (err) { console.error(err); alert('Delete failed'); }
+        }
+    });
+
+    resetBtn.addEventListener('click', resetForm);
+
+    function resetForm(){
+        userIdInput.value = '';
+        nameInput.value = '';
+        roleInput.value = 'Student';
+    }
+
+    function escapeHtml(s){
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // initial load
+    loadUsers();
+});
+  </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Library Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                        0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }    body { 
+      font-family: Arial, sans-serif;
+       margin: 20px;
+    }
+    .header { 
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       background: #0d6efd;
+       padding: 10px; 
+       color: white; 
+       border-radius: 5px; 
+    }
+    table {
+       width: 100%;
+        border-collapse: collapse; 
+        margin-top: 20px;
+       }
+    th, td { 
+      border: 1px solid #ddd;
+       padding: 10px; 
+       text-align: center; 
+    }
+    th {
+       background-color: #f2f2f2;
+       }
+    button {
+      background-color: #0d6efd;
+       color: white;
+        border: none;
+         padding: 8px 12px; 
+         border-radius: 4px; 
+         cursor: pointer; 
+    }
+    button:disabled {
+       background-color: #aaa;
+       }
+    .sidebar {
+      margin-top: 20px; 
+    }
+
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <!-- Navigation Bar -->
+        <nav class="bg-indigo-600 text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex-shrink-0 text-2xl font-bold">
+                        Student Portal
+                    </div>
+                    <div class="flex space-x-4">
+                        <span id="welcome-message" class="text-indigo-200 self-center"></span>
+                        <button id="logout-button" class="bg-indigo-700 hover:bg-indigo-800 text-white font-medium py-2 px-4 rounded-lg transition duration-150">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 w-full">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-8">Welcome to the Library!</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1: Browse Books -->
+                <div class="card bg-white p-6 rounded-xl border border-gray-200">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-3">Browse Catalog</h2>
+                    <p class="text-gray-600 mb-4">Search and discover available books.</p>
+                    <button onclick="window.location.href='viewbooks.html'" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">View Books</button>
+                </div>
+
+                <!-- Card 2: My Borrowed Books -->
+                <div class="card bg-white p-6 rounded-xl border border-gray-200">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-3">My Borrowings</h2>
+                    <p class="text-gray-600 mb-4">Check due dates and request renewals.</p>
+                    <button onclick="window.location.href='myborrowings.html'" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">View Loans</button>
+                </div>
+
+                <!-- Card 3: Account Info -->
+                <div class="card bg-white p-6 rounded-xl border border-gray-200">
+                    <h2 class="text-2xl font-semibold text-indigo-600 mb-3">Account Settings</h2>
+                    <p class="text-gray-600 mb-4">Update your profile information.</p>
+                   <button onclick="window.location.href='profile.html'" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-150">Profile</button>
+                </div>
+            </div>
+            
+            <div id="status-message" class="mt-8 text-lg font-medium text-center text-indigo-600">
+                You are currently viewing the student dashboard.
+            </div>
+        </main>
+    </div>
+    <script>
+         // Display username
+        const storedUsername = localStorage.getItem('username') || 'Student';
+        document.getElementById('welcome-message').textContent = `Hello, ${storedUsername}`;
+
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', () => {
+            alert("Logging out...");
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('username');
+            // ✅ Redirect to login page (make sure login.html exists)
+            window.location.href = "login.html";
+        });
+
+        // Fetch books and borrowed books when needed
+        async function fetchBooks() {
+            try {
+                const response = await fetch("http://localhost:8080/api/books");
+                const books = await response.json();
+                renderBooks(books);
+            } catch (error) {
+                console.error("Error fetching books:", error);
+            }
+        }
+
+        function renderBooks(books) {
+            const tbody = document.querySelector("#booksTable tbody");
+            if (!tbody) return; // prevents errors if table doesn't exist
+            tbody.innerHTML = "";
+            books.forEach(book => {
+                const row = `
+                    <tr>
+                        <td>${book.id}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.available ? "Yes" : "No"}</td>
+                        <td><button onclick="borrowBook('${book.id}')" ${!book.available ? "disabled" : ""}>Borrow</button></td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        async function borrowBook(id) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/books/borrow/${id}`, { method: "PUT" });
+                if (response.ok) {
+                    alert("Book borrowed successfully!");
+                    fetchBooks();
+                    loadBorrowedBooks();
+                } else {
+                    const data = await response.json();
+                    alert(data.message || "Failed to borrow book.");
+                }
+            } catch (error) {
+                console.error("Error borrowing book:", error);
+                alert("Could not reach server to borrow book.");
+            }
+        }
+
+        async function loadBorrowedBooks() {
+            try {
+                const response = await fetch("http://localhost:8080/api/books/borrowed");
+                const books = await response.json();
+                const list = document.getElementById("borrowedBooks");
+                if (!list) return; // prevents error if element missing
+                list.innerHTML = "";
+                books.forEach(b => {
+                    list.innerHTML += `<li>${b.title}</li>`;
+                });
+            } catch (error) {
+                console.error("Error loading borrowed books:", error);
+            }
+        }
+
+        function searchBooks() {
+            const input = document.getElementById("search");
+            if (!input) return;
+            let value = input.value.toLowerCase();
+            let rows = document.querySelectorAll("#booksTable tbody tr");
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchBooks();
+            loadBorrowedBooks();
+        }); 
+    </script>
+</body>
+</html>

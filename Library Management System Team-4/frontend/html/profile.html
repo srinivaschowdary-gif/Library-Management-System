@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">My Profile</h1>
+      <button onclick="window.history.back()" class="px-3 py-2 bg-gray-200 rounded">Back</button>
+    </div>
+
+    <form id="profileForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium">Username</label>
+        <input id="username" class="mt-1 block w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Email</label>
+        <input id="email" type="email" class="mt-1 block w-full border p-2 rounded" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Password (leave empty to keep current)</label>
+        <input id="password" type="password" class="mt-1 block w-full border p-2 rounded" />
+      </div>
+
+      <div class="flex gap-2">
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Save</button>
+        <button type="button" onclick="loadProfile()" class="px-4 py-2 bg-gray-200 rounded">Reload</button>
+      </div>
+    </form>
+  </div>
+
+<script>
+  const userId = localStorage.getItem('userId') || null;
+
+  async function loadProfile(){
+    if (!userId) {
+      alert("No userId in localStorage. Set localStorage.setItem('userId','<your-id>') for testing.");
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:8080/api/profile/${encodeURIComponent(userId)}`);
+      if (!res.ok) { alert("Profile not found"); return; }
+      const user = await res.json();
+      document.getElementById('username').value = user.username || '';
+      document.getElementById('email').value = user.email || '';
+    } catch (e) {
+      console.error(e);
+      alert("Could not load profile");
+    }
+  }
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!userId) { alert("No logged in user"); return; }
+    const payload = {
+      username: document.getElementById('username').value,
+      email: document.getElementById('email').value
+    };
+    const pw = document.getElementById('password').value;
+    if (pw) payload.passwordHash = pw; // NOTE: hash in production
+    try {
+      const res = await fetch(`http://localhost:8080/api/profile/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        alert('Profile updated');
+        // optionally update stored username
+        localStorage.setItem('username', payload.username);
+      } else {
+        alert('Failed to update profile');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error contacting server');
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+</body>
+</html>

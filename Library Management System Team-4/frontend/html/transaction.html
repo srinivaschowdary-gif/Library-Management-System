@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Library Management - Transactions</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-blue-100 p-4 flex justify-between items-center shadow">
+    <h1 class="text-2xl font-bold">Library Management System</h1>
+    <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="logout()">Logout</button>
+  </header>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside class="w-1/5 bg-white shadow p-4">
+      <button class="block w-full mb-3 py-2 rounded bg-gray-200 hover:bg-gray-300" onclick="navigateTo('managebooks')">Manage Books</button>
+      <button class="block w-full mb-3 py-2 rounded bg-gray-200 hover:bg-gray-300" onclick="navigateTo('manageusers')">Manage Users</button>
+      <button class="block w-full py-2 rounded bg-blue-500 text-white">Transactions</button>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 p-8">
+      <h2 class="text-3xl font-semibold mb-6">Transactions</h2>
+
+      <!-- Issue Book Section -->
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-xl font-semibold mb-4">Issue Book</h3>
+        <div class="flex flex-wrap gap-4 items-center">
+          <select id="book" class="border p-2 rounded w-64" required>
+            <option value="">-- Select Book --</option>
+          </select>
+
+          <select id="borrower" class="border p-2 rounded w-64" required>
+            <option value="">-- Select Borrower --</option>
+          </select>
+
+          <input type="date" id="issueDate" class="border p-2 rounded" required>
+          <input type="date" id="dueDate" class="border p-2 rounded" required>
+          <button id="saveBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>
+        </div>
+      </div>
+
+      <!-- Transactions Table -->
+      <div class="bg-white shadow rounded-lg p-4 overflow-x-auto">
+        <table id="transactionsTable" class="min-w-full text-left border">
+          <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-4 py-2 border-r">ID</th>
+              <th class="px-4 py-2 border-r">Book</th>
+              <th class="px-4 py-2 border-r">Borrower</th>
+              <th class="px-4 py-2 border-r">Issue Date</th>
+              <th class="px-4 py-2 border-r">Due Date</th>
+              <th class="px-4 py-2 border-r">Fine (₹)</th>
+              <th class="px-4 py-2">Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+<script>
+const API_URL = "http://localhost:8080/api/transactions";
+const BOOKS_URL = "http://localhost:8080/api/books";
+const USERS_URL = "http://localhost:8080/api/users";
+
+// NOTE: delete endpoint uses same base as API_URL
+document.addEventListener("DOMContentLoaded", () => {
+  loadDropdowns();
+  loadTransactions();
+  document.getElementById("saveBtn").addEventListener("click", issueBook);
+});
+
+// Load books and users into dropdowns
+async function loadDropdowns() {
+  try {
+    const [booksRes, usersRes] = await Promise.all([fetch(BOOKS_URL), fetch(USERS_URL)]);
+    if (!booksRes.ok || !usersRes.ok) throw new Error("Failed to load books/users for dropdowns");
+
+    const books = await booksRes.json();
+    const users = await usersRes.json();
+
+    const bookSelect = document.getElementById("book");
+    const borrowerSelect = document.getElementById("borrower");
+
+    bookSelect.innerHTML = `<option value="">-- Select Book --</option>` +
+      books.map(b => `<option value="${b.id}">${escapeHtml(b.title || b.name || b.id)}</option>`).join("");
+
+    borrowerSelect.innerHTML = `<option value="">-- Select Borrower --</option>` +
+      users.map(u => `<option value="${u.id}">${escapeHtml(u.name || u.id)}</option>`).join("");
+  } catch (err) {
+    console.error(err);
+    alert("Error loading books or users. Check backend endpoints /api/books and /api/users.");
+  }
+}
+
+// Issue book (POST)
+async function issueBook() {
+  const book = document.getElementById("book").value;
+  const borrower = document.getElementById("borrower").value;
+  const issueDate = document.getElementById("issueDate").value;
+  const dueDate = document.getElementById("dueDate").value;
+
+  if (!book || !borrower || !issueDate || !dueDate) {
+    alert("Please fill all fields.");
+    return;
+  }
+
+  // Build transaction object
+  const transaction = { book, borrower, issueDate, dueDate };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transaction)
+    });
+
+    if (!res.ok) {
+      // read server error message if available
+      const text = await res.text();
+      throw new Error(text || "Error issuing book");
+    }
+
+    alert("Book issued successfully!");
+    // reset to defaults
+    document.getElementById("book").selectedIndex = 0;
+    document.getElementById("borrower").selectedIndex = 0;
+    document.getElementById("issueDate").value = "";
+    document.getElementById("dueDate").value = "";
+    loadTransactions();
+  } catch (err) {
+    console.error(err);
+    alert("Error issuing book: " + err.message);
+  }
+}
+
+// Load transactions (GET)
+async function loadTransactions() {
+  const tbody = document.querySelector("#transactionsTable tbody");
+  tbody.innerHTML = "<tr><td colspan='7' class='p-4'>Loading...</td></tr>";
+
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Failed to load transactions");
+    }
+    const transactions = await res.json();
+    tbody.innerHTML = "";
+
+    if (!transactions || transactions.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='7' class='p-4 text-center'>No transactions found.</td></tr>";
+      return;
+    }
+
+    transactions.forEach(t => {
+      const row = document.createElement("tr");
+      row.className = "border-t";
+      const fine = (typeof t.fine === "number") ? t.fine.toFixed(2) : "0.00";
+      // Escape text before inserting to avoid HTML injection
+      row.innerHTML = `
+        <td class="px-4 py-2">${escapeHtml(t.id)}</td>
+        <td class="px-4 py-2">${escapeHtml(t.bookTitle || t.book || "N/A")}</td>
+        <td class="px-4 py-2">${escapeHtml(t.borrowerName || t.borrower || "user name")}</td>
+        <td class="px-4 py-2">${escapeHtml(t.issueDate || "")}</td>
+        <td class="px-4 py-2">${escapeHtml(t.dueDate || "")}</td>
+        <td class="px-4 py-2 text-red-600 font-semibold">${fine}</td>
+        <td class="px-4 py-2">
+          <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onclick="deleteTransaction('${t.id}')">Return</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = "<tr><td colspan='7' class='p-4 text-center text-red-500'>Error loading transactions</td></tr>";
+  }
+}
+
+// Delete transaction (return book) — use same base API_URL
+async function deleteTransaction(id) {
+  if (!confirm("Confirm return of this book?")) return;
+  try {
+    const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || "Error deleting transaction");
+    }
+    alert("Book returned successfully!");
+    loadTransactions();
+  } catch (err) {
+    console.error(err);
+    alert("Error deleting transaction: " + err.message);
+  }
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+function navigateTo(page) {
+  if (page === "managebooks") window.location.href = "../html/managebook.html";
+  if (page === "manageusers") window.location.href = "../html/manageuser.html";
+  if (page === "transactions") window.location.href = "../html/transaction.html";
+}
+
+// small helper to escape user-provided text for insertion into HTML
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+</script>
+</body>
+</html>

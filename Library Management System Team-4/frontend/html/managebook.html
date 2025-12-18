@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Management System</title>
+  <style>
+    *{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+ body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+  margin: 0;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  background: #dde6f1;
+  padding: 15px 40px;
+}
+header h1 {
+  margin: 0;
+}
+header button {
+  padding: 8px 16px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: white;
+}
+.container {
+  display: flex;
+  padding: 20px;
+}
+aside {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+aside button {
+  padding: 10px;
+  border: none;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+aside button.active, aside button:hover {
+  background: #e0eaf6;
+}
+main {
+  flex: 1;
+  margin-left: 40px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+td button {
+  margin-right: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+button.edit {
+  background: #eee;
+}
+button.delete {
+  background: #f44;
+  color: white;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.3);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+}
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+}
+.buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+  </style>
+</head>
+<body>
+    <header>
+        <h1>Library Management System</h1>
+        <button id="logoutBtn" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="container">
+        <aside>
+            <button onclick="showAddForm()">Add Book</button>
+            <button class="active" onclick="navigateTo('managebooks')">Manage Books</button>
+            <button onclick="navigateTo('manageusers')">Manage Users</button>
+            <button onclick="navigateTo('transactions')">Transactions</button>
+        </aside>
+
+        <main>
+            <h2>Manage Books</h2>
+            <table id="bookTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Copies</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div id="bookForm" class="modal">
+                <div class="modal-content">
+                    <h3 id="formTitle">Add Book</h3>
+                    <form onsubmit="saveBook(event)">
+                        <input type="hidden" id="bookId">
+                        <label>Title:</label>
+                        <input type="text" id="title" required>
+                        <label>Author:</label>
+                        <input type="text" id="author" required>
+                        <label>Copies:</label>
+                        <input type="number" id="copies" min="0" required>
+                        <div class="buttons">
+                            <button type="submit">Save</button>
+                            <button type="button" onclick="closeForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ✅ Correct API endpoint for your Spring Boot backend
+const API_URL = "http://localhost:8080/api/books";
+
+
+// --- Sidebar Navigation ---
+function navigateTo(page) {
+    if (page === 'managebooks') window.location.href = 'managebook.html';
+    else if (page === 'manageusers') window.location.href = 'ManageUser.html';
+    else if (page === 'transactions') window.location.href = 'transaction.html';
+}
+
+function logout() {
+    alert("Logging out...");
+    window.location.href = "login.html";
+}
+
+// --- Load Books from Backend ---
+async function loadBooks() {
+    try {
+        const res = await fetch(API_URL);
+        const books = await res.json();
+        const tbody = document.querySelector("#bookTable tbody");
+        tbody.innerHTML = "";
+
+        books.forEach((b, i) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${b.title}</td>
+                <td>${b.author}</td>
+                <td>${b.copies}</td>
+                <td>
+                    <button class="edit" onclick="editBook('${b.id}', '${b.title}', '${b.author}', ${b.copies})">Edit</button>
+                    <button class="delete" onclick="deleteBook('${b.id}')">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Error loading books:", error);
+        alert("Failed to load books from server.");
+    }
+}
+
+// --- Add or Edit Book ---
+function showAddForm() {
+    document.getElementById("formTitle").innerText = "Add Book";
+    document.getElementById("bookId").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("author").value = "";
+    document.getElementById("copies").value = "";
+    document.getElementById("bookForm").style.display = "flex";
+}
+
+function closeForm() {
+    document.getElementById("bookForm").style.display = "none";
+}
+
+function editBook(id, title, author, copies) {
+    document.getElementById("formTitle").innerText = "Edit Book";
+    document.getElementById("bookId").value = id;
+    document.getElementById("title").value = title;
+    document.getElementById("author").value = author;
+    document.getElementById("copies").value = copies;
+    document.getElementById("bookForm").style.display = "flex";
+}
+
+// --- Save (POST or PUT) ---
+async function saveBook(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("bookId").value;
+    const book = {
+        title: document.getElementById("title").value,
+        author: document.getElementById("author").value,
+        copies: parseInt(document.getElementById("copies").value)
+    };
+
+    const method = id ? "PUT" : "POST";
+    const url = id ? `${API_URL}/${id}` : API_URL;
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(book)
+        });
+
+        if (res.ok) {
+            closeForm();
+            loadBooks();
+        } else {
+            alert("Failed to save book. Server responded with status " + res.status);
+        }
+    } catch (error) {
+        console.error("Error saving book:", error);
+        alert("Could not reach server to save book.");
+    }
+}
+
+// --- Delete Book ---
+async function deleteBook(id) {
+    if (!confirm("Delete this book?")) return;
+    try {
+        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        if (res.ok) {
+            loadBooks();
+        } else {
+            alert("Failed to delete book.");
+        }
+    } catch (error) {
+        console.error("Error deleting book:", error);
+        alert("Could not reach server to delete book.");
+    }
+}
+
+// Load books when page opens
+window.onload = loadBooks;
+
+    </script>
+</body>
+</html>

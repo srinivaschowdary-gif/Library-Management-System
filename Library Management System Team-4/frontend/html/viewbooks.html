@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Library Management — View Books</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Available Books</h1>
+      <div>
+        <button onclick="window.history.back()" class="px-3 py-2 bg-gray-300 rounded">Back</button>
+      </div>
+    </div>
+
+    <div class="mb-4 flex gap-2">
+      <input id="search" oninput="searchBooks()" class="border p-2 rounded w-full" placeholder="Search by title or author" />
+      <button onclick="refreshAll()" class="px-4 py-2 bg-indigo-600 text-white rounded">Refresh</button>
+    </div>
+
+    <table id="booksTable" class="min-w-full bg-white rounded shadow overflow-hidden">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left">Title</th>
+          <th class="px-4 py-2 text-left">Author</th>
+          <th class="px-4 py-2 text-left">Copies</th>
+          <th class="px-4 py-2 text-left">Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- <h2 class="text-2xl font-semibold mt-8">My Borrowed Books</h2>
+    <ul id="borrowedBooks" class="list-disc ml-6 mt-2"></ul> -->
+  </div>
+
+<script>
+  // User id (for local testing). Replace with real auth flow in production.
+  const userId = localStorage.getItem('userId') || 'demoUser';
+  localStorage.setItem('userId', userId);
+
+  const API_BASE = 'http://localhost:8080/api/books';
+
+  // Load all books
+  async function loadBooks() {
+    try {
+      const res = await fetch(`${API_BASE}`);
+      if (!res.ok) throw new Error('Failed to load books');
+      const books = await res.json();
+      renderBooks(books);
+    } catch (e) {
+      console.error(e);
+      alert('Could not load books from server.');
+    }
+  }
+
+  function renderBooks(books) {
+    const tbody = document.querySelector('#booksTable tbody');
+    tbody.innerHTML = '';
+    books.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-t';
+      tr.innerHTML = `
+        <td class="px-4 py-3">${escapeHtml(b.title)}</td>
+        <td class="px-4 py-3">${escapeHtml(b.author)}</td>
+        <td class="px-4 py-3">${b.copies}</td>
+        <td class="px-4 py-3">
+          <button class="px-3 py-1 rounded ${b.copies > 0 ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}"
+                  ${b.copies <= 0 ? 'disabled' : ''} 
+                  onclick="borrow('${b.id}')">
+            Borrow
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Borrow endpoint
+  async function borrow(bookId) {
+    try {
+      const res = await fetch(`${API_BASE}/borrow/${encodeURIComponent(bookId)}?userId=${encodeURIComponent(userId)}`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // After successful borrow, reload both lists
+        await refreshAll();
+      } else {
+        alert(data.message || 'Failed to borrow');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error contacting server');
+    }
+  }
+
+ // Load borrowed books with details DTO from backend
+  async function loadBorrowed() {
+    try {
+      const res = await fetch(`${API_BASE}/borrowed/details/${encodeURIComponent(userId)}`);
+      if (!res.ok) throw new Error('Failed to load borrowed details');
+      const borrowed = await res.json(); // [{ loanId, bookId, title, dueAt }]
+      const list = document.getElementById('borrowedBooks');
+      list.innerHTML = '';
+      if (!Array.isArray(borrowed) || borrowed.length === 0) {
+        list.innerHTML = '<li>No books borrowed yet.</li>';
+        return;
+      }
+      borrowed.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'mb-2';
+        li.innerHTML = `
+          <span>${escapeHtml(item.title)} — due <b>${escapeHtml(item.dueAt)}</b></span>
+          <button class="ml-3 px-2 py-1 bg-red-500 text-white rounded" onclick="returnBook('${escapeHtml(item.loanId)}')">Return</button>
+        `;
+        list.appendChild(li);
+      });
+    } catch (e) {
+      console.error(e);
+      const list = document.getElementById('borrowedBooks');
+      list.innerHTML = '<li>Unable to load borrowed books.</li>';
+    }
+  }
+
+  // Return endpoint
+  async function returnBook(loanId) {
+    try {
+      const res = await fetch(`${API_BASE}/return/${encodeURIComponent(loanId)}`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await refreshAll();
+      } else {
+        alert(data.message || 'Failed to return book');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error contacting server');
+    }
+  }
+
+  function refreshAll() {
+    loadBooks();
+    loadBorrowed();
+  }
+
+  function searchBooks() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('#booksTable tbody tr').forEach(tr => {
+      const text = tr.innerText.toLowerCase();
+      tr.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+
+  function escapeHtml(s) {
+    return (s + '').replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
+  }
+
+  document.addEventListener('DOMContentLoaded', refreshAll);
+</script>
+</body>
+</html>
