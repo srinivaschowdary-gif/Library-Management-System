@@ -1,12 +1,8 @@
 package com.example.LibraryManagementSystem.BookController;
 
 import com.example.LibraryManagementSystem.book.User;
-import com.example.LibraryManagementSystem.book.Librarian;
 import com.example.LibraryManagementSystem.BookRepository.UserRepository;
-import com.example.LibraryManagementSystem.BookRepository.LibrarianRepository;
-import com.example.LibraryManagementSystem.payload.AuthRequest;
-import com.example.LibraryManagementSystem.payload.AuthResponse;
-import com.example.LibraryManagementSystem.payload.RegisterRequest;
+import com.example.LibraryManagementSystem.payload.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,88 +19,67 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private LibrarianRepository librarianRepository;
-
-    // ✅ REGISTER ENDPOINT (for both Student and Librarian)
+    // ✅ REGISTER
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        String role = registerRequest.getRole();
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
-        // Check if email already exists in either collection
-        if (userRepository.existsByEmail(registerRequest.getEmail()) ||
-            librarianRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(
-                    new AuthResponse(false, "Email is already in use")
-            );
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest()
+                    .body(new AuthResponse(false, "Email already exists"));
         }
 
-        String hashed = BCrypt.hashpw(registerRequest.getPassword(), BCrypt.gensalt(12));
+        String role = request.getRole().trim();
 
-        if ("Librarian".equalsIgnoreCase(role)) {
-            Librarian librarian = new Librarian(
-                    registerRequest.getUsername(),
-                    registerRequest.getEmail(),
-                    hashed,
-                    "Librarian"
-            );
-            librarianRepository.save(librarian);
-            return ResponseEntity.ok(new AuthResponse(true,
-                    "Librarian registered successfully",
-                    librarian.getUsername(),
-                    librarian.getEmail(),
-                    librarian.getRole(),
-                    librarian.getId()));
-        } else {
-            User user = new User(
-                    registerRequest.getUsername(),
-                    registerRequest.getEmail(),
-                    hashed,
-                    "Student"
-            );
-            userRepository.save(user);
-            return ResponseEntity.ok(new AuthResponse(true,
-                    "User registered successfully",
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRole(),
-                    user.getId()));
+        if (!role.equalsIgnoreCase("Student") &&
+            !role.equalsIgnoreCase("Librarian")) {
+            return ResponseEntity.badRequest()
+                    .body(new AuthResponse(false, "Invalid role"));
         }
+
+        String hashed = BCrypt.hashpw(
+                request.getPassword(),
+                BCrypt.gensalt(12)
+        );
+
+        User user = new User(
+                request.getUsername(),
+                request.getEmail(),
+                hashed,
+                role
+        );
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new AuthResponse(
+                true,
+                "Registered successfully",
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getId()
+        ));
     }
 
-    // ✅ LOGIN ENDPOINT (checks both collections)
+    // ✅ LOGIN
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
 
-        // 1️⃣ Check User collection
-        Optional<User> maybeUser = userRepository.findByEmail(authRequest.getEmail());
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
-            if (BCrypt.checkpw(authRequest.getPassword(), user.getPasswordHash())) {
-                return ResponseEntity.ok(new AuthResponse(true,
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
+                return ResponseEntity.ok(new AuthResponse(
+                        true,
                         "Login successful",
                         user.getUsername(),
                         user.getEmail(),
                         user.getRole(),
-                        user.getId()));
+                        user.getId()
+                ));
             }
         }
 
-        // 2️⃣ Check Librarian collection
-        Optional<Librarian> maybeLibrarian = librarianRepository.findByEmail(authRequest.getEmail());
-        if (maybeLibrarian.isPresent()) {
-            Librarian librarian = maybeLibrarian.get();
-            if (BCrypt.checkpw(authRequest.getPassword(), librarian.getPassword())) {
-                return ResponseEntity.ok(new AuthResponse(true,
-                        "Login successful",
-                        librarian.getUsername(),
-                        librarian.getEmail(),
-                        librarian.getRole(),
-                        librarian.getId()));
-            }
-        }
-
-        // ❌ If neither matched
         return ResponseEntity.badRequest()
                 .body(new AuthResponse(false, "Invalid email or password"));
     }

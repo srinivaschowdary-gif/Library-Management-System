@@ -26,8 +26,7 @@ public class TransactionService {
     private static final double FINE_PER_DAY = 5.0;
 
     // UPDATED CONSTRUCTOR: Must include LibrarianRepository
-    public TransactionService(TransactionRepository transactionRepo, BookRepository bookRepo, 
-                              UserRepository userRepo, LibrarianRepository librarianRepo) {
+    public TransactionService(TransactionRepository transactionRepo, BookRepository bookRepo, UserRepository userRepo, LibrarianRepository librarianRepo) {
         this.transactionRepo = transactionRepo;
         this.bookRepo = bookRepo;
         this.userRepo = userRepo;
@@ -125,8 +124,8 @@ public class TransactionService {
         // 1. Check Student (User) collection
         Optional<User> userOpt = userRepo.findById(id);
         if (userOpt.isPresent()) {
-            String name = userOpt.get().getName();
-            // Return only if the name is not null or empty
+            String name = userOpt.get().getUsername();
+
             if (name != null && !name.trim().isEmpty()) return name;
         }
 
