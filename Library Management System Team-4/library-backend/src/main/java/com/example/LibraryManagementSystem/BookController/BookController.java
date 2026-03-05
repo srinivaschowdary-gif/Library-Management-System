@@ -69,7 +69,7 @@ public class BookController {
         bookRepository.deleteById(id);
     }
 
-    // ✅ Borrow a book
+    //  Borrow a book
     @PostMapping("/borrow/{bookId}")
     public Response borrowBook(@PathVariable String bookId, @RequestParam String userId) {
         Optional<Book> opt = bookRepository.findById(bookId);
@@ -100,7 +100,7 @@ public class BookController {
         return new Response(true, "Book borrowed successfully");
     }
 
-    // ✅ Delete transaction (return book)
+    //  Delete transaction (return book)
     @DeleteMapping("/transaction/{transactionId}")
     public Response deleteTransaction(@PathVariable String transactionId) {
         Optional<Transaction> transOpt = transactionRepository.findById(transactionId);

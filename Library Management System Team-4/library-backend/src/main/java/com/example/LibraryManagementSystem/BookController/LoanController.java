@@ -23,13 +23,13 @@ public class LoanController {
     @Autowired
     private BookRepository bookRepository;
 
-    // ✅ Get all active (not returned) loans for a user
+    //  Get all active (not returned) loans for a user
     @GetMapping("/user/{userId}")
     public List<Loan> getLoansByUser(@PathVariable String userId) {
         return loanRepository.findByUserIdAndReturnedFalse(userId);
     }
 
-    // ✅ Return book: mark loan returned + increment book copies
+    //  Return book: mark loan returned + increment book copies
     @PutMapping("/{loanId}/return")
     public ResponseEntity<ReturnResponse> markAsReturned(@PathVariable String loanId) {
         Optional<Loan> loanOpt = loanRepository.findById(loanId);
@@ -62,7 +62,7 @@ public class LoanController {
         return ResponseEntity.ok(new ReturnResponse(true, "Book returned successfully"));
     }
 
-    // ✅ Simple response DTO for frontend feedback
+    //  Simple response DTO for frontend feedback
     static class ReturnResponse {
         public boolean success;
         public String message;

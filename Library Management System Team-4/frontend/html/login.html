@@ -166,8 +166,7 @@ body{
         </form>
     </div>
     <script>
-    // ✅ Form toggle functions (critical fix)
-// ✅ Form toggle functions (critical fix)
+    //  Form toggle functions (critical fix)
 function showregister() {
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
@@ -178,7 +177,7 @@ function showlogin() {
     document.getElementById('login-form').style.display = 'block';
 }
 
-// ✅ Main logic
+//  Main logic
 window.onload = function() {
     document.getElementById("register-form").style.display = "none";
 
@@ -225,7 +224,7 @@ window.onload = function() {
         }
     });
 
-    // 🔹 REGISTER EVENT
+    //  REGISTER EVENT
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 

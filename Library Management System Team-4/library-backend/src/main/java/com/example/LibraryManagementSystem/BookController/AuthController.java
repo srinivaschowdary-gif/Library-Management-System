@@ -19,7 +19,7 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    // ✅ REGISTER
+    //  REGISTER
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
@@ -60,7 +60,7 @@ public class AuthController {
         ));
     }
 
-    // ✅ LOGIN
+    //  LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
 

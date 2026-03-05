@@ -30,10 +30,10 @@ public void setRole(String role) { this.role = role; }
 public Librarian() {}
 
 public Librarian(String username, String email, String password, String role) {
-  this.username = username;
-  this.email = email;
-  this.password = password;
-  this.role = role;
+this.username = username;
+this.email = email;
+this.password = password;
+this.role = role;
 }
     
     // CRITICAL FIX: Ensure getName() returns String and uses the display name (username).
