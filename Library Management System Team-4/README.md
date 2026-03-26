@@ -92,10 +92,12 @@ The main objective of this project is to automate library management tasks, redu
 ---
 
 ## Team Work
-This project was developed collaboratively by our team.  
+This project was developed collaboratively by our team.
 Each member contributed to frontend, backend, database, and version control activities.
 
 ---
 
 ##  Conclusion
 The Library Management System provides a simple, scalable, and efficient solution for managing library operations using modern technologies.
+
+Project completed

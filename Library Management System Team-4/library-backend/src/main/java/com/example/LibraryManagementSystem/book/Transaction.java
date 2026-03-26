@@ -12,7 +12,7 @@ public class Transaction {
     private String id;
     private String book;        // Book ID
     private String borrower;    // User ID
-    private String bookTitle;   // For display (populated server-side)
+    private String bookTitle;   // For display 
     private Object borrowerName;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate issueDate;

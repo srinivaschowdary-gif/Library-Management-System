@@ -23,7 +23,7 @@ public class LoanController {
     @Autowired
     private BookRepository bookRepository;
 
-    //  Get all active (not returned) loans for a user
+    // Get all active (not returned) loans for a user
     @GetMapping("/user/{userId}")
     public List<Loan> getLoansByUser(@PathVariable String userId) {
         return loanRepository.findByUserIdAndReturnedFalse(userId);

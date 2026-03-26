@@ -4,8 +4,8 @@ import com.example.LibraryManagementSystem.book.Transaction;
 import com.example.LibraryManagementSystem.book.Book;
 import com.example.LibraryManagementSystem.book.User;
 // Necessary imports
-import com.example.LibraryManagementSystem.book.Librarian; 
-import com.example.LibraryManagementSystem.BookRepository.LibrarianRepository; 
+import com.example.LibraryManagementSystem.book.Librarian;
+import com.example.LibraryManagementSystem.BookRepository.LibrarianRepository;
 import com.example.LibraryManagementSystem.BookRepository.TransactionRepository;
 import com.example.LibraryManagementSystem.BookRepository.BookRepository;
 import com.example.LibraryManagementSystem.BookRepository.UserRepository;
@@ -21,12 +21,12 @@ public class TransactionService {
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
     // Inject the Librarian repository
-    private final LibrarianRepository librarianRepo; 
+    private final LibrarianRepository librarianRepo;
 
-    private static final double FINE_PER_DAY = 5.0;
+    private static final double FINE_PER_DAY = 2.0;
 
-    // UPDATED CONSTRUCTOR: Must include LibrarianRepository
-    public TransactionService(TransactionRepository transactionRepo, BookRepository bookRepo, UserRepository userRepo, LibrarianRepository librarianRepo) {
+    public TransactionService(TransactionRepository transactionRepo, BookRepository bookRepo,
+        UserRepository userRepo, LibrarianRepository librarianRepo) {
         this.transactionRepo = transactionRepo;
         this.bookRepo = bookRepo;
         this.userRepo = userRepo;
@@ -35,7 +35,6 @@ public class TransactionService {
 
     public List<Transaction> getAll() {
         List<Transaction> list = transactionRepo.findAll();
-        // Populate display names and compute fine
         list.forEach(this::populateNames);
         list.forEach(this::calculateFine);
         return list;
@@ -53,13 +52,10 @@ public class TransactionService {
     public Transaction add(Transaction t) {
         Book book = bookRepo.findById(t.getBook()).orElseThrow(() -> new RuntimeException("Book not found"));
 
-        // FIX 1: Consolidated lookup for borrower
         String borrowerName = findBorrowerNameById(t.getBorrower());
         if (borrowerName == null) {
-            // This is the error message seen in your screenshot 
             throw new RuntimeException("Error issuing book: User not found with ID " + t.getBorrower()); 
         }
-        
         if (book.getCopies() <= 0) {
             throw new RuntimeException("No copies available");
         }
@@ -70,7 +66,7 @@ public class TransactionService {
 
         // Set names for display
         t.setBookTitle(book.getTitle());
-        t.setBorrowerName(borrowerName); // Set the name from the lookup
+        t.setBorrowerName(borrowerName);
         t.setFine(0.0);
 
         return transactionRepo.save(t);
@@ -100,7 +96,6 @@ public class TransactionService {
         transactionRepo.deleteById(id);
     }
 
-    // MODIFIED HELPER: Uses consolidated lookup for table display
     private void populateNames(Transaction t) {
         if (t.getBook() != null) {
             bookRepo.findById(t.getBook()).ifPresent(b -> t.setBookTitle(b.getTitle()));
@@ -111,21 +106,19 @@ public class TransactionService {
             if (borrowerName != null) {
                 t.setBorrowerName(borrowerName);
             } else {
-                // If the name is not found, keep the borrower ID in borrowerName temporarily 
-                // so the front-end has something, though the ID should usually be used.
-                // However, the front-end fallback logic will handle it: ${t.borrowerName || t.borrower}
+                // If the name is not found, keep the borrower ID in borrowerName temporarily
                 t.setBorrowerName(null);
             }
         }
     }
-    
+
     // CONSOLIDATED LOOKUP FUNCTION (Checks both User and Librarian)
     private String findBorrowerNameById(String id) {
         // 1. Check Student (User) collection
         Optional<User> userOpt = userRepo.findById(id);
         if (userOpt.isPresent()) {
-            String name = userOpt.get().getUsername();
-
+            String name = userOpt.get().getName();
+            // Return only if the name is not null or empty
             if (name != null && !name.trim().isEmpty()) return name;
         }
 
@@ -136,7 +129,7 @@ public class TransactionService {
             // Return only if the name is not null or empty
             if (name != null && !name.trim().isEmpty()) return name;
         }
-        
+
         return null; // ID not found in either collection, or name/username field is empty
     }
 

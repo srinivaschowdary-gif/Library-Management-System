@@ -18,7 +18,7 @@ public class ManageUserService {
     public List<ManageUser> getAll(String q) {
         if (q == null || q.isBlank()) {
             return repo.findAll();
-        }	
+        }
         return repo.findByNameContainingIgnoreCaseOrRoleContainingIgnoreCase(q, q);
     }
 

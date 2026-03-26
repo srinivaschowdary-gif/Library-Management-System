@@ -11,7 +11,7 @@ private String id;
 private String username;
 private String email;
 private String password;
-private String role; 
+private String role;
 
 
 public String getId() { return id; }
@@ -35,7 +35,7 @@ this.email = email;
 this.password = password;
 this.role = role;
 }
-    
+
     // CRITICAL FIX: Ensure getName() returns String and uses the display name (username).
     public String getName() {
         return username;

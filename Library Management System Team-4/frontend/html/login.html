@@ -32,55 +32,55 @@ body{
         border-radius: 10px;
         width: 350px;
         height: 300px;
- }
+}
 
- .login-form style{
-   height: fit-content;
- }
-  h2{
+.login-form style{
+    height: fit-content;
+}
+h2{
     font-size: 35px;
     margin-bottom: 30px;
     color: white;
- }
- .input{
+}
+.input{
     padding-top: 15px;
     gap: 2rem;
- }
- .input input{
+}
+.input input{
     width: 100%;
     padding: 0.6rem;
     margin: 10px 0;
     border-radius: 3px;
     border: 1px solid #ccc;
- }
- .button{
+}
+.button{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     margin: 1.5rem;
- }
+}
 
- .button button{
+.button button{
     width: 110px;
     height: 30px;
     margin: 2px;
     border-radius: 3px;
     font-size: 18px;
- }
+}
 
- .submit-btn{
+.submit-btn{
     background-color: rgb(43, 43, 206);
     color: white;
     border-color: rgb(43, 43, 206);
- }
+}
 
- .register-btn{
+.register-btn{
     border: 1px solid #ccc
- }
+}
 
 
- .register-form{
+.register-form{
         display: none;
         background: white;
         align-items: center;
@@ -91,11 +91,11 @@ body{
         height: 350px;
 }
 
- .register-form h2{
+.register-form h2{
     padding-left: 80px;
     color: black;
     font-size: 2rem;
- }
+}
 
 .register-form input{
     width: 100%;
@@ -129,7 +129,7 @@ body{
 </head>
 <body>
     <h2>LibraryManagementSystem</h2>
-    
+
     <!-- Login Form -->
     <div class="login-form" id="login-form">
         <form>
@@ -145,7 +145,7 @@ body{
             </div>
         </form>
     </div>
-    
+
     <!-- Register Form -->
     <div class="register-form" id="register-form" style="display: none;">
         <h2>Register</h2>
@@ -153,20 +153,20 @@ body{
             <input type="text" name="username" id="reg-username" placeholder="Username" required><br>
             <input type="email" name="email" id="reg-email" placeholder="Email" required><br>
             <input type="password" name="password" id="reg-password" placeholder="Password" required><br>
-            
+
             <!-- CRITICAL: Role Selection sent to the Java backend -->
             <select name="role" id="reg-role" required>
                 <option value="" disabled selected>Select Role</option>
                 <option value="Student">Student</option>
                 <option value="Librarian">Librarian</option>
             </select><br>
-            
+
             <button type="submit">Register</button><br>
             <p>Already registered? <a href="#" id="showlogin" onclick="showlogin()">Login Here</a></p>
         </form>
     </div>
     <script>
-    //  Form toggle functions (critical fix)
+    //  Form toggle functions
 function showregister() {
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
@@ -185,7 +185,7 @@ window.onload = function() {
     const registerForm = document.querySelector('#register-form form');
     const API_BASE = 'http://localhost:8080/api/auth';
 
-    // 🔹 LOGIN EVENT
+    //  LOGIN EVENT
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.querySelector('#login-form input[name="email"]').value.trim();

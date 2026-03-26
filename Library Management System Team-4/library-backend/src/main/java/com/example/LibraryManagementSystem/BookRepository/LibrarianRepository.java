@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface LibrarianRepository extends MongoRepository<Librarian, String> {
- 
+
  // Method to find a Librarian by email for login/checks
- Optional<Librarian> findByEmail(String email);
+Optional<Librarian> findByEmail(String email);
 }

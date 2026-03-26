@@ -3,105 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <title>Library Management System</title>
-  <style>
+    <style>
     *{
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
- body {
-  font-family: Arial, sans-serif;
-  background: #f5f7fa;
-  margin: 0;
+    body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
 }
 header {
-  display: flex;
-  justify-content: space-between;
-  background: #dde6f1;
-  padding: 15px 40px;
+display: flex;
+justify-content: space-between;
+background: #dde6f1;
+padding: 15px 40px;
 }
 header h1 {
-  margin: 0;
+margin: 0;
 }
 header button {
-  padding: 8px 16px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background: white;
+padding: 8px 16px;
+border: 1px solid #555;
+border-radius: 4px;
+background: white;
 }
 .container {
-  display: flex;
-  padding: 20px;
+display: flex;
+padding: 20px;
 }
 aside {
-  width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+width: 200px;
+display: flex;
+flex-direction: column;
+gap: 10px;
 }
 aside button {
-  padding: 10px;
-  border: none;
-  background: white;
-  border-radius: 5px;
-  cursor: pointer;
+padding: 10px;
+border: none;
+background: white;
+border-radius: 5px;
+cursor: pointer;
 }
 aside button.active, aside button:hover {
-  background: #e0eaf6;
+background: #e0eaf6;
 }
 main {
-  flex: 1;
-  margin-left: 40px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
+flex: 1;
+margin-left: 40px;
+background: white;
+padding: 20px;
+border-radius: 8px;
 }
 table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
 }
 th, td {
-  border: 1px solid #ddd;
-  padding: 10px;
+border: 1px solid #ddd;
+padding: 10px;
 }
 td button {
-  margin-right: 8px;
-  padding: 5px 10px;
-  border-radius: 5px;
+margin-right: 8px;
+padding: 5px 10px;
+border-radius: 5px;
 }
 button.edit {
-  background: #eee;
+background: #eee;
 }
 button.delete {
-  background: #f44;
-  color: white;
+background: #f44;
+color: white;
 }
 .modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.3);
-  justify-content: center;
-  align-items: center;
+display: none;
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+background: rgba(0,0,0,0.3);
+justify-content: center;
+align-items: center;
 }
 .modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 300px;
+background: white;
+padding: 20px;
+border-radius: 8px;
+width: 300px;
 }
 .modal-content label {
-  display: block;
-  margin-top: 10px;
+display: block;
+margin-top: 10px;
 }
 .buttons {
-  margin-top: 15px;
-  display: flex;
-  justify-content: space-between;
+margin-top: 15px;
+display: flex;
+justify-content: space-between;
 }
-  </style>
+</style>
 </head>
 <body>
     <header>
@@ -154,7 +154,7 @@ button.delete {
     </div>
 
     <script>
-        // ✅ Correct API endpoint for your Spring Boot backend
+        // Correct API endpoint for your Spring Boot backend
 const API_URL = "http://localhost:8080/api/books";
 
 

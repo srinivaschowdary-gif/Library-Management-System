@@ -1,7 +1,6 @@
 package com.example.LibraryManagementSystem.payload;
 
 public class AuthResponse {
-
     private boolean success;
     private String message;
     private String username;
@@ -14,9 +13,7 @@ public class AuthResponse {
         this.message = message;
     }
 
-    public AuthResponse(boolean success, String message,
-                        String username, String email,
-                        String role, String id) {
+    public AuthResponse(boolean success, String message, String username, String email, String role, String id) {
         this.success = success;
         this.message = message;
         this.username = username;
@@ -25,7 +22,7 @@ public class AuthResponse {
         this.id = id;
     }
 
-    // getters & setters
+    // Getters and setters
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
 
